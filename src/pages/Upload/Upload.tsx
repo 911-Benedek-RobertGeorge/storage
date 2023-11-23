@@ -67,7 +67,7 @@ export const UploadData: React.FC = () => {
     try {
       const response = await axios.post(apiUrlPost, formData, {
         headers: {
-          "authorization": `Bearer ${theToken}`,
+          "authorization": `Bearer ${tokenLogin?.nativeAuthToken}`,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -151,7 +151,7 @@ export const UploadData: React.FC = () => {
     try {
       const response = await axios.post(apiUrlPost, formDataFormat, {
         headers: {
-          "authorization": `Bearer ${theToken}`,
+          "authorization": `Bearer ${tokenLogin?.nativeAuthToken}`,
           "Content-Type": "multipart/form-data",
         },
       });
