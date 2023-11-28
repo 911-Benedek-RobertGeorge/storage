@@ -49,8 +49,7 @@ export const DataAssetList: React.FC = () => {
   const { tokenLogin } = useGetLoginInfo();
   const [dataAssetFiles, setDataAssetFiles] = useState<DataAsset[]>([]);
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
-  const theToken =
-    "ZXJkMXZ5ZWp2NTJlNDNmeHE5NmNzY2h5eWo5ZzU3cW45a2d0eHJoa2c5MmV5aGZ1NWEwMjJwbHF0ZHh2ZG0.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuNWQyZWJiMDE0ZmFiZTg4YjI4MTE3MjY4NTZmOThiMDVkMTEyNDkzZjBiNjZjMmIwY2UzYzgxNGViMjVkZWI1Ni43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURFeE9UQXdNREI5.e4bc5176f9fd7547bcd69d23c8e846ff97194ecb10a9d588924013a12310dd46ba54023a9155f85e23dd96262bce2cf13a72fa5992ba256ae5c2d7ac3a167406";
+  const theToken = tokenLogin?.nativeAuthToken;
   const apiUrlPost = `${API_URL}/upload`; //refactor this as env file
 
   // upload the songs and images of all the songs
