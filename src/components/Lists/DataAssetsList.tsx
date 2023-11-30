@@ -51,8 +51,7 @@ export const DataAssetList: React.FC = () => {
   const [dataAssetFiles, setDataAssetFiles] = useState<DataAsset[]>([]);
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
-  const theToken =
-    "ZXJkMXZ5ZWp2NTJlNDNmeHE5NmNzY2h5eWo5ZzU3cW45a2d0eHJoa2c5MmV5aGZ1NWEwMjJwbHF0ZHh2ZG0.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuZDMwZTYyZTZmZmE2YmZiN2E1N2E4NjYzNjQ0ZmExZmM3Y2UwMzAyMzkwMjRhMDUzOThlYjljNWJjZmNjNjhkYy43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURFek16VXlOemg5.956c0f735682424e733d38bac96cb35590928a3ebd7275a367ff5c11ad48d9782204510ab9ad4bcb44fa6d976c9498e365f431969079616295c42866c29fc60b";
+  const theToken = tokenLogin?.nativeAuthToken;
   const apiUrlPost = `${API_URL}/upload`; //refactor this as env file
 
   // upload the songs and images of all the songs
@@ -77,15 +76,12 @@ export const DataAssetList: React.FC = () => {
   function getManifestFilesFromDataAssets() {
     if (storedDataAssets) {
       const filteredData = storedDataAssets.filter((item) => item.fileName && item.fileName.includes("manifest"));
-      console.log("filtered:", filteredData);
-      // I got this filteredData list and im trying to only get the latest version of each object, in the fileName will have "1.manifest-..." , " 2.manifest- ... " and i only need to keep the latest version for each different filename
 
       let latestVersionManifestFile: { [key: string]: { version: number; cidv1: string } } = {};
       filteredData.forEach((item) => {
         const fileName = item.fileName.split(".-")[1]; //   filename format is "1.-manifest-..."
         const version = parseInt(item.fileName.split(".-")[0]);
         if (!fileName) return;
-        console.log("Split", item.fileName.split(".-"));
 
         if (!latestVersionManifestFile[fileName] || version > latestVersionManifestFile[fileName].version) {
           latestVersionManifestFile[fileName] = {
@@ -94,7 +90,6 @@ export const DataAssetList: React.FC = () => {
           };
         }
       });
-      console.log("latestV", latestVersionManifestFile);
       setLatestVersionCid(latestVersionManifestFile);
       setDataAssetFiles(filteredData);
     }

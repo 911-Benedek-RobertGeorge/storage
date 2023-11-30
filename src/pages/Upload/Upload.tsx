@@ -8,6 +8,7 @@ import { API_URL } from "../../utils/constants";
 import { ToolTip } from "../../libComponents/Tooltip";
 import { CopyIcon, InfoIcon } from "lucide-react";
 
+/// todo when reloading after uploading a manifest file, make it to show the new manifest file not the old one
 type SongData = {
   date: string;
   category: string;
@@ -24,14 +25,11 @@ type FilePair = {
 
 export const UploadData: React.FC = (props) => {
   const location = useLocation();
-  // const action = state ? state.action : null;
-  //const { manifestFile } = location.state || {};
-  //const {  } = location.state || {};
+
   const { manifestFile, action, type, template, storage, descentralized, version } = location.state || {};
   const [songsData, setSongsData] = useState<Record<number, SongData>>({});
   const [filePairs, setFilePairs] = useState<Record<number, FilePair>>({});
 
-  //console.log("SONGS DATA", songsData);
   const [numberOfSongs, setNumberOfSongs] = useState(1);
   const { tokenLogin } = useGetLoginInfo();
   const [isUploadingSongs, setIsUploadingSongs] = useState(false);
@@ -46,9 +44,8 @@ export const UploadData: React.FC = (props) => {
     totalItems: 0,
     stream: "no",
   });
-  const theToken =
-    "ZXJkMXZ5ZWp2NTJlNDNmeHE5NmNzY2h5eWo5ZzU3cW45a2d0eHJoa2c5MmV5aGZ1NWEwMjJwbHF0ZHh2ZG0.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuZDMwZTYyZTZmZmE2YmZiN2E1N2E4NjYzNjQ0ZmExZmM3Y2UwMzAyMzkwMjRhMDUzOThlYjljNWJjZmNjNjhkYy43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURFek16VXlOemg5.956c0f735682424e733d38bac96cb35590928a3ebd7275a367ff5c11ad48d9782204510ab9ad4bcb44fa6d976c9498e365f431969079616295c42866c29fc60b";
-  const apiUrlPost = `${API_URL}/upload`; //refactor this as env file
+  const theToken = tokenLogin?.nativeAuthToken;
+  const apiUrlPost = `${API_URL}/upload`;
 
   useEffect(() => {
     if (manifestFile && manifestFile.data_stream) {
@@ -69,27 +66,27 @@ export const UploadData: React.FC = (props) => {
         },
         {} as Record<number, SongData>
       );
-      //console.log("SOngsData MAP ", songsDataMap);
       setSongsData(songsDataMap);
     }
   }, [manifestFile]);
 
   // upload the songs and images of all the songs
   async function uploadSongsAndImagesFiles() {
+    /// refactor , iterate through the files, not through the songsData
     const filesToUpload = new FormData();
-    //console.log("UPLOADING");
+
     //iterating over the songsData and for each object add its image and song to the formData
     Object.values(songsData).forEach((songData, idx) => {
       // todo must change the way of storing, its not ok only by title
-      //console.log("Before");
       if (songData && songData?.title && filePairs[idx + 1]) {
-        if (filePairs[idx + 1]?.image) filesToUpload.append("files", filePairs[idx + 1].image, "image." + songData.title); ///   + "-" + filePairs[idx+1].image.name);
-
-        if (filePairs[idx + 1]?.audio) filesToUpload.append("files", filePairs[idx + 1].audio, "audio." + songData.title); //+ "-" + filePairs[idx+1].audio.name);
-        //console.log("inside if ");
+        if (filePairs[idx + 1]?.image) {
+          filesToUpload.append("files", filePairs[idx + 1].image, (version ? version + 1 : "1") + ".-image." + songData.title); ///   + "-" + filePairs[idx+1].image.name);
+        }
+        if (filePairs[idx + 1]?.audio) filesToUpload.append("files", filePairs[idx + 1].audio, (version ? version + 1 : "1") + ".-audio." + songData.title); //+ "-" + filePairs[idx+1].audio.name);
       }
     });
-    //console.log("form data ", formData);
+    //console.log("form data : ", filesToUpload.getAll("files").length);
+
     if (filesToUpload.getAll("files").length === 0) return [];
     try {
       const response = await axios.post(apiUrlPost, filesToUpload, {
@@ -103,14 +100,13 @@ export const UploadData: React.FC = (props) => {
       console.error("Error uploading files:", error);
     }
   }
-  // console.log("File pairs : ", filePairs);
 
   // get all songs data into the right format for manifest file
   async function transformSongsData() {
     setIsUploadingSongs(true);
     try {
       const responseDataCIDs = await uploadSongsAndImagesFiles();
-      console.log("THE RESPONSE data IS : ", responseDataCIDs);
+      //console.log("THE RESPONSE data IS : ", responseDataCIDs);
 
       if (!responseDataCIDs) throw new Error("Upload songs did not work correctly");
       // Iterate through the response list and find the matching cidv1
@@ -118,28 +114,24 @@ export const UploadData: React.FC = (props) => {
         if (songObj && songObj?.title) {
           let matchingObjImage;
           let matchingObjSong;
-          console.log("index", index);
           const fileObj = filePairs[index + 1];
-          console.log("fileobg", fileObj);
           if (fileObj) {
             if (fileObj.image && fileObj.image.name) {
-              matchingObjImage = responseDataCIDs.find((uploadedFileObj: any) => uploadedFileObj.fileName === `image.${songObj.title}`);
+              matchingObjImage = responseDataCIDs.find(
+                (uploadedFileObj: any) => uploadedFileObj.fileName === (version ? version + 1 : "1") + `.-image.${songObj.title}`
+              );
               if (!matchingObjImage) throw new Error("The data has not been uploaded correctly. Image CID could not be found");
             }
-            if (fileObj.audio && fileObj.audio.name)
-              matchingObjSong = responseDataCIDs.find((uploadedFileObj: any) => uploadedFileObj.fileName === `audio.${songObj.title}`); ///songObj.file[0]?.name);
-            if (!matchingObjSong) throw new Error("The data has not been uploaded correctly. Song CID could not be found");
+            if (fileObj.audio && fileObj.audio.name) {
+              matchingObjSong = responseDataCIDs.find(
+                (uploadedFileObj: any) => uploadedFileObj.fileName === (version ? version + 1 : "1") + `.-audio.${songObj.title}`
+              );
+              if (!matchingObjSong) throw new Error("The data has not been uploaded correctly. Song CID could not be found");
+            }
           }
 
-          // matchingObjImage = responseDataCIDs.find((uploadedFileObj: any) => uploadedFileObj.fileName === `image.${songObj.title}`);
-          // matchingObjSong = responseDataCIDs.find((uploadedFileObj: any) => uploadedFileObj.fileName === `audio.${songObj.title}`); ///songObj.file[0]?.name);
-          console.log("matching IMG: ", matchingObjImage);
-          console.log("SONG:", matchingObjSong);
-
-          // if the file were not found throw error
-          // if (!matchingObjImage && !matchingObjSong) {
-          //   throw new Error("The data has not been uploaded correctly. CID could not be found");
-          // }
+          //          console.log("matching IMG: ", matchingObjImage);
+          // console.log("SONG:", matchingObjSong);
 
           return {
             idx: index + 1,
@@ -154,8 +146,6 @@ export const UploadData: React.FC = (props) => {
         }
       });
 
-      //console.log("Transformed DATA LIST ", transformedData);
-
       setIsUploadingSongs(false);
       return transformedData;
     } catch (err) {
@@ -163,11 +153,9 @@ export const UploadData: React.FC = (props) => {
       setIsUploadingSongs(false);
     }
   }
-  console.log("Manifest file from update", manifestFile);
 
   const generateManifestFile = async () => {
     const data = await transformSongsData();
-    console.log("The data", data);
     if (data === undefined) {
       throw new Error("Error transforming the data");
     }
@@ -186,8 +174,6 @@ export const UploadData: React.FC = (props) => {
       },
       "data": data,
     };
-    console.log("Manifest : ", manifest);
-    // console.log("TOJEN", tokenLogin?.nativeAuthToken);
 
     ///GETTER
     const formDataFormat = new FormData();
@@ -206,8 +192,8 @@ export const UploadData: React.FC = (props) => {
         },
       });
 
-      console.log("Response upload manifest:", response.data);
-      const ipfs: any = "https://ipfs.io/ipfs/" + response.data[0].cidv1;
+      //console.log("Response upload manifest:", response.data);
+      const ipfs: any = "ipfs/" + response.data[0].cidv1;
       if (response.data[0]) setManifestCid(ipfs);
       else {
         throw new Error("The manifest file has not been uploaded correctly");
@@ -234,7 +220,6 @@ export const UploadData: React.FC = (props) => {
 
   /// analyze this for performance
   function swapSongs(first: number, second: number) {
-    //console.log(first, second, numberOfSongs);
     if (first < 1 || second >= numberOfSongs) {
       return;
     }
@@ -293,12 +278,11 @@ export const UploadData: React.FC = (props) => {
       // Neither image nor audio exists
       console.log("Both image and audio are missing");
     }
-
     setSongsData((prev) => Object.assign({}, prev, { [index]: formInputs }));
   };
 
-  function copyLink(): void {
-    if (manifestCid) navigator.clipboard.writeText(manifestCid);
+  function copyLink(text: string): void {
+    if (text) navigator.clipboard.writeText(text);
     else console.log("Error: Manifest is null. Nothing to copy");
   }
 
@@ -456,9 +440,15 @@ export const UploadData: React.FC = (props) => {
           <div className="text-green-400 flex flex-row gap-4">
             Success:
             <a href={manifestCid} target="_blank" className="font-semibold underline text-blue-500">
+              {"https://ipfs.io/" + manifestCid}
+            </a>
+            <CopyIcon onClick={() => copyLink("https://ipfs.io/" + manifestCid)} className="h-5 w-5 cursor-pointer text-blue-500"></CopyIcon>
+          </div>
+          <div className="text-green-400 flex flex-row gap-4">
+            <a href={manifestCid} target="_blank" className="font-semibold underline text-blue-500">
               {manifestCid}
             </a>
-            <CopyIcon onClick={copyLink} className="h-5 w-5 cursor-pointer text-blue-500"></CopyIcon>
+            <CopyIcon onClick={() => copyLink(manifestCid)} className="h-5 w-5 cursor-pointer text-blue-500"></CopyIcon>
           </div>
           <div className="mt-4 mx-auto">
             <ToolTip tooltip="I am tooltip  ">
