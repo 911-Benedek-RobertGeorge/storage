@@ -1,28 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { MusicDataNftForm } from "../../components/InputComponents/MusicDataNftForm";
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "../../libComponents/Button";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import { useGetLoginInfo } from "@multiversx/sdk-dapp/hooks";
 import { API_URL } from "../../utils/constants";
-import { ToolTip } from "../../libComponents/Tooltip";
-import { CopyIcon, InfoIcon } from "lucide-react";
+
 import DataAssetCard from "../CardComponents/DataAssetCard";
 
-type SongData = {
-  date: string;
-  category: string;
-  artist: string;
-  album: string;
-  title: string;
-  file: string;
-  cover_art_url: string;
-};
-type FilePair = {
-  idx: number;
-  image: File;
-  audio: File;
-};
 interface DataStream {
   name: string;
   creator: string;
@@ -48,13 +31,12 @@ type DataAsset = {
 export const DataAssetList: React.FC = () => {
   const [storedDataAssets, setStoredDataAssets] = useState<DataAsset[]>([]);
   const { tokenLogin } = useGetLoginInfo();
-  const [dataAssetFiles, setDataAssetFiles] = useState<DataAsset[]>([]);
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
-  const theToken = tokenLogin?.nativeAuthToken;
-  const apiUrlPost = `${API_URL}/upload`; //refactor this as env file
+  const theToken =
+    "ZXJkMXZ5ZWp2NTJlNDNmeHE5NmNzY2h5eWo5ZzU3cW45a2d0eHJoa2c5MmV5aGZ1NWEwMjJwbHF0ZHh2ZG0.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuNWExYWY1ZGY3ZjQ5NzFiOTJhMDQwNDRjMmZmNTIzYTUxYjA5ZmIxZTczYzdhYmM3NDVhNWIxN2M2NWZkZWE2Mi43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURFMU5URXlNemw5.548e50cdf78e360e566340fc84d5f42673da0bfc64b97b0576db5f96160ce0a4c0a7588ff3ef208a26146003b89794e111771b81c92126eab9fc6db8a3419d0d";
 
-  // upload the songs and images of all the songs
+  // fetch all data assets of an address
   async function fetchAllDataAssetsOfAnAddress() {
     const apiUrlGet = `${API_URL}/files`;
 
@@ -73,13 +55,14 @@ export const DataAssetList: React.FC = () => {
     }
   }
 
+  // get the latest version of the manifest file for each data asset
   function getManifestFilesFromDataAssets() {
     if (storedDataAssets) {
       const filteredData = storedDataAssets.filter((item) => item.fileName && item.fileName.includes("manifest"));
 
       let latestVersionManifestFile: { [key: string]: { version: number; cidv1: string } } = {};
       filteredData.forEach((item) => {
-        const fileName = item.fileName.split(".-")[1]; //   filename format is "1.-manifest-..."
+        const fileName = item.fileName.split(".-")[1]; //   filename format is "1.-manifest-name-creator"
         const version = parseInt(item.fileName.split(".-")[0]);
         if (!fileName) return;
 
@@ -91,10 +74,10 @@ export const DataAssetList: React.FC = () => {
         }
       });
       setLatestVersionCid(latestVersionManifestFile);
-      setDataAssetFiles(filteredData);
     }
   }
 
+  // download the manifest file for the coresponding CID
   async function downloadTheManifestFile(version: number, manifestCid: string) {
     const apiUrlDownloadFile = `${API_URL}/file/` + manifestCid;
 
