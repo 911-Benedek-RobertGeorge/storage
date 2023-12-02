@@ -33,9 +33,8 @@ export const DataAssetList: React.FC = () => {
   const { tokenLogin } = useGetLoginInfo();
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
-  const theToken =
-    "ZXJkMXZ5ZWp2NTJlNDNmeHE5NmNzY2h5eWo5ZzU3cW45a2d0eHJoa2c5MmV5aGZ1NWEwMjJwbHF0ZHh2ZG0.YUhSMGNITTZMeTkxZEdsc2N5NXRkV3gwYVhabGNuTjRMbU52YlEuNWExYWY1ZGY3ZjQ5NzFiOTJhMDQwNDRjMmZmNTIzYTUxYjA5ZmIxZTczYzdhYmM3NDVhNWIxN2M2NWZkZWE2Mi43MjAwLmV5SjBhVzFsYzNSaGJYQWlPakUzTURFMU5URXlNemw5.548e50cdf78e360e566340fc84d5f42673da0bfc64b97b0576db5f96160ce0a4c0a7588ff3ef208a26146003b89794e111771b81c92126eab9fc6db8a3419d0d";
-
+  const theToken =   tokenLogin?.nativeAuthToken  ;
+ 
   // fetch all data assets of an address
   async function fetchAllDataAssetsOfAnAddress() {
     const apiUrlGet = `${API_URL}/files`;
