@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useGetLoginInfo } from "@multiversx/sdk-dapp/hooks";
 import { API_URL } from "../../utils/constants";
-
-import DataAssetCard from "../CardComponents/DataAssetCard";
+ import DataAssetCard from "../CardComponents/DataAssetCard";
+import toast, { Toaster } from "react-hot-toast";
 
 interface DataStream {
   name: string;
@@ -21,6 +21,7 @@ interface ManifestFile {
   data: [];
   version: number;
 }
+
 type DataAsset = {
   fileName: string;
   id: string;
@@ -28,14 +29,14 @@ type DataAsset = {
   cidv1: string;
   mimeType: string;
 };
+
 export const DataAssetList: React.FC = () => {
   const [storedDataAssets, setStoredDataAssets] = useState<DataAsset[]>([]);
   const { tokenLogin } = useGetLoginInfo();
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
-  const theToken =   tokenLogin?.nativeAuthToken  ;
- 
-  // fetch all data assets of an address
+  const theToken = tokenLogin?.nativeAuthToken;
+  // fetch all data assets of an address    
   async function fetchAllDataAssetsOfAnAddress() {
     const apiUrlGet = `${API_URL}/files`;
 
@@ -43,14 +44,13 @@ export const DataAssetList: React.FC = () => {
       const response = await axios.get(apiUrlGet, {
         headers: {
           "authorization": `Bearer ${theToken}`,
-          "Content-Type": "multipart/form-data",
         },
       });
 
       setStoredDataAssets(response.data);
-      return response.data;
     } catch (error) {
-      console.error("Error uploading files:", error);
+      console.error(error);
+      throw error; // error to be catched by toast.promise
     }
   }
 
@@ -88,14 +88,17 @@ export const DataAssetList: React.FC = () => {
       });
       const versionStampedManifestFile = { ...response.data, version: version };
       setManifestFiles((prev) => [...prev, versionStampedManifestFile]);
-
-      return response.data;
     } catch (error) {
-      console.error("Error uploading files:", error);
+      console.error("Error downloading manifest files:", error);
+      toast.error("Error downloading manifest files. Check your connection and try again.");
     }
   }
   useEffect(() => {
-    fetchAllDataAssetsOfAnAddress();
+    toast.promise(fetchAllDataAssetsOfAnAddress(), {
+      loading: "Fetching all data assets from Ipfs of your address...",
+      success: <b>Fetched all data assets from Ipfs of your address!</b>,
+      error: <b>The data assests could not be fetched. Check your connection and try again.</b>,
+    });
   }, []);
 
   useEffect(() => {
@@ -103,9 +106,11 @@ export const DataAssetList: React.FC = () => {
   }, [storedDataAssets]);
 
   useEffect(() => {
-    Object.entries(latestVersionCid).map(([key, manifestCid]) => {
-      downloadTheManifestFile(manifestCid.version, manifestCid.cidv1);
-    });
+    if (Object.keys(latestVersionCid).length !== 0) {
+      Object.entries(latestVersionCid).map(([key, manifestCid]) => {
+        downloadTheManifestFile(manifestCid.version, manifestCid.cidv1);
+      });
+    }
   }, [latestVersionCid]);
 
   return (
@@ -117,6 +122,21 @@ export const DataAssetList: React.FC = () => {
           </Link>
         ))}
       </div>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          className: "",
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            duration: 3000,
+          },
+        }}
+      />
     </div>
   );
 };
