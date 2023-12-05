@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,8 +10,9 @@ import songFallbackImage from "../../assets/img/audio-player-image.png";
 //todo add validation for the file size and type
 // todo if the img is not loading it keeps the image of the song you are swaping with (maybe add a fallback image)
 // todo check why getting 502(The gateway is currently overloaded. Please wait a while and retry your request.
-
+// todo when deleting a song the next one after gets required fields and saved
 /// validation schema
+
 const formSchema = z.object({
   date: z.string().min(1, "Required field"),
   category: z.string().min(1, "Required field"),
@@ -80,7 +81,7 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
   const [audioURL, setAudioURL] = useState("");
   const [imageFile, setImageFile] = useState<File>();
   const [audioFile, setAudioFile] = useState<File>();
-
+  const [audioError, setAudioError] = useState(false);
   const handleImageFileChange = (event: any) => {
     const file = event.target.files[0];
     setImageFile(file);
@@ -101,7 +102,7 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
 
   // populate the form
   useEffect(() => {
-    console.log("received song props", props.song);
+    //console.log("received song props", props.song);
     form.setValue("date", props.song["date"] ? new Date(props.song["date"]).toISOString().split("T")[0] : "");
     form.setValue("category", props.song["category"] ? props.song["category"] : "");
     form.setValue("artist", props.song["artist"] ? props.song["artist"] : "");
@@ -125,6 +126,12 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
     setImageFile(undefined);
     setAudioFile(undefined);
   }, [props.song]);
+
+  useEffect(() => {
+    const values = form.getValues();
+    console.log("values modification", values);
+    props.setterFunction(props.index, values, imageFile, audioFile);
+  }, [form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     props.setterFunction(props.index, values, imageFile, audioFile);
@@ -150,12 +157,16 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
       <div className="relative">
         <div className="absolute top-0 right-0">
           <div className="flex flex-col justify-between">
-            <Button onClick={handleMoveUp} className="hover:shadow-inner hover:shadow-sky-500">
-              <ArrowUp />
-            </Button>
-            <Button onClick={handleMoveDown} className="hover:shadow-inner hover:shadow-sky-500">
-              <ArrowDown></ArrowDown>
-            </Button>
+            {props.index != 1 && (
+              <Button onClick={handleMoveUp} className="hover:shadow-inner hover:shadow-sky-500">
+                <ArrowUp />
+              </Button>
+            )}
+            {props.index != 1 && (
+              <Button onClick={handleMoveDown} className="hover:shadow-inner hover:shadow-sky-500">
+                <ArrowDown></ArrowDown>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -198,13 +209,15 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
           )}
         </div>
         <div className="gap-4 flex-col flex items-center justify-center ">
-          <img
-            className="mx-auto flex justify-center allign-center w-32 h-32 border border-white"
-            src={imageURL !== "" ? imageURL : songFallbackImage}
-            onError={() => {
-              setImageURL(songFallbackImage);
-            }}
-            alt={"Cover Image"}></img>{" "}
+          <Suspense fallback={<div>Loading image...</div>}>
+            <img
+              className="mx-auto flex justify-center allign-center w-32 h-32 border border-white"
+              src={imageURL !== "" ? imageURL : songFallbackImage}
+              onError={() => {
+                setImageURL(songFallbackImage);
+              }}
+              alt={"Cover Image"}></img>{" "}
+          </Suspense>
           <label className=" block text-foreground">Cover Art Image</label>
           <div className="flex w-full justify-end">
             {(imageFile || imageURL !== "") && !wantToEditImage ? (
@@ -231,11 +244,12 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
             {audioURL && !wantToEditAudio ? (
               <div className="flex justify-center flex-col w-full ">
                 <div className="flex flex-row justify-center">
-                  <audio src={audioURL} className="scale-75" controls></audio>
+                  <audio onError={() => setAudioError(true)} src={audioURL} onLoad={() => console.log("loaded")} className="scale-75" controls></audio>
                   <Button className="scale-75  ml-auto  hover:shadow-inner hover:shadow-sky-400 " onClick={() => setwantToEditAudio(true)}>
                     <Edit2 scale={0.5}></Edit2>
                   </Button>
                 </div>
+                {audioError && <p className="mx-auto text-red-500">Error loading audio file from IPFS.</p>}
               </div>
             ) : (
               <input type="file" accept=".mp3" className="w-full p-2 border border-gray-300 rounded" onChange={(e) => handleAudioFileChange(e)} />

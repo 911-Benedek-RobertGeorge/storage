@@ -10,10 +10,10 @@ import { CopyIcon, InfoIcon } from "lucide-react";
 import ProgressBar from "../../components/ProgressBar";
 import toast, { Toaster } from "react-hot-toast";
 
- 
-//todo verify and dont allow users to upload manifest files without songs
+import { theToken } from "../../utils/constants";
+
+// todo verify and dont allow users to upload manifest files without songs
 // todo when reloading after uploading a manifest file, make it to show the new manifest file not the old one
-// todo error handling , watch a video before
 
 type SongData = {
   date: string;
@@ -39,7 +39,6 @@ export const UploadData: React.FC = (props) => {
 
   const [numberOfSongs, setNumberOfSongs] = useState(1);
   const { tokenLogin } = useGetLoginInfo();
-  const theToken = tokenLogin?.nativeAuthToken;
 
   const [isUploadingSongs, setIsUploadingSongs] = useState(false);
   const [isUploadingManifest, setIsUploadingManifest] = useState(false);
@@ -49,8 +48,8 @@ export const UploadData: React.FC = (props) => {
   const [formData, setFormData] = useState({
     name: "",
     creator: "",
-    createdOn: "",
-    modifiedOn: "",
+    createdOn: manifestFile && manifestFile.data_stream.created_on ? manifestFile.data_stream.created_on : new Date().toISOString().split("T")[0],
+    modifiedOn: new Date().toISOString().split("T")[0],
     totalItems: 0,
     stream: "false",
   });
@@ -208,6 +207,8 @@ export const UploadData: React.FC = (props) => {
    * @throws {Error} If there is an error transforming the data or if the manifest file is not uploaded correctly.
    */
   const generateManifestFile = async () => {
+    setIsUploadingManifest(true);
+
     if (!formData.name || !formData.creator || !formData.createdOn || !songsData) {
       toast.error("Please fill all the fields from the header section");
       return;
@@ -217,7 +218,6 @@ export const UploadData: React.FC = (props) => {
       if (data === undefined) {
         throw new Error("Error transforming the data. Add at least one song.");
       }
-      setIsUploadingManifest(true);
       setProgressBar(60);
       const manifest = {
         "data_stream": {
@@ -346,11 +346,11 @@ export const UploadData: React.FC = (props) => {
   /// copy the link to clipboard
   function copyLink(text: string): void {
     if (text) navigator.clipboard.writeText(text);
-    else toast.error("Error copying the link to clipboard");
+    else toast.error("Error copying the link to clipboard. Link is empty.");
   }
-  // console.log("songsData: ", songsData);
+  console.log("songsData: ", songsData);
   // console.log("filePairs: ", filePairs);
-  // console.log("manifestFile: ", manifestFile);
+  console.log("manifestFile: ", manifestFile);
   // console.log("formData: ", formData);
   // console.log("totalItems: ", numberOfSongs);
   // console.log("manifestCid: ", manifestCid);
@@ -388,6 +388,7 @@ export const UploadData: React.FC = (props) => {
         <div className="absolute top-30 -left-20 w-96 h-72 bg-sky-500/70 rounded-full  mix-blend-multiply filter blur-2xl opacity-50  animate-blob animation-delay-4000"></div>
         <div className="absolute top-20 -left-20 w-96 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-blob "></div>
       </div>
+      {/** Refactor this into a Header component */}
       <div className="min-h-screen flex flex-col items-center justify-start rounded-3xl bg-black/20">
         <div className="z-2 p-4 flex flex-col bg-gradient-to-b from-sky-500/20 via-[#300171]/20 to-black/20 rounded-3xl shadow-xl hover:shadow-sky-500/50 max-w mx-auto">
           <div className="flex flex-row gap-8 items-center">
@@ -573,7 +574,7 @@ export const UploadData: React.FC = (props) => {
           },
         }}
       />
-      <ProgressBar progress={progressBar} />
+      {isUploadingManifest && <ProgressBar progress={progressBar} />}
     </div>
   );
 };
