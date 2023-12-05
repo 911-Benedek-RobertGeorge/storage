@@ -10,8 +10,7 @@ import { CopyIcon, InfoIcon, XCircle } from "lucide-react";
 import ProgressBar from "../../components/ProgressBar";
 import toast, { Toaster } from "react-hot-toast";
 
-import { theToken } from "../../utils/constants";
-
+ 
 // todo verify and dont allow users to upload manifest files without songs
 // todo when reloading after uploading a manifest file, make it to show the new manifest file not the old one
 //todo add a modal after the upload with whats next
@@ -41,7 +40,7 @@ export const UploadData: React.FC = (props) => {
 
   const [numberOfSongs, setNumberOfSongs] = useState(1);
   const { tokenLogin } = useGetLoginInfo();
-
+  const theToken = tokenLogin?.nativeAuthToken;
   const [isUploadingSongs, setIsUploadingSongs] = useState(false);
   const [isUploadingManifest, setIsUploadingManifest] = useState(false);
 
