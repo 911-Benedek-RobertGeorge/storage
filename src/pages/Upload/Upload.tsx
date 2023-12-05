@@ -37,8 +37,8 @@ export const UploadData: React.FC = (props) => {
 
   const [numberOfSongs, setNumberOfSongs] = useState(1);
   const { tokenLogin } = useGetLoginInfo();
-  const theToken = tokenLogin.nativeAuthToken;
-
+  const theToken = tokenLogin?.nativeAuthToken;
+  
   const [isUploadingSongs, setIsUploadingSongs] = useState(false);
   const [isUploadingManifest, setIsUploadingManifest] = useState(false);
 
