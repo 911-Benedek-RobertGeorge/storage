@@ -55,6 +55,7 @@ const formSchema = z.object({
 type MusicDataNftFormProps = {
   index: number;
   song: any;
+  lastItem: boolean;
   setterFunction: (index: number, formInputs: any, image: any, audio: any) => void;
   swapFunction: (first: number, second: number) => void; // will swap first index with the second in the parrent component
 };
@@ -102,7 +103,6 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
 
   // populate the form
   useEffect(() => {
-    //console.log("received song props", props.song);
     form.setValue("date", props.song["date"] ? new Date(props.song["date"]).toISOString().split("T")[0] : "");
     form.setValue("category", props.song["category"] ? props.song["category"] : "");
     form.setValue("artist", props.song["artist"] ? props.song["artist"] : "");
@@ -129,7 +129,6 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
 
   useEffect(() => {
     const values = form.getValues();
-    console.log("values modification", values);
     props.setterFunction(props.index, values, imageFile, audioFile);
   }, [form]);
 
@@ -151,19 +150,18 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
   function deleteSong() {
     props.swapFunction(Number(props.index), -1);
   }
-
   return (
     <div className="  z-2 p-4 flex flex-col bg-gradient-to-b from-sky-500/20 via-[#300171]/20 to-black/20 rounded-3xl shadow-xl hover:shadow-sky-500/50 max-w mx-auto">
       <div className="relative">
         <div className="absolute top-0 right-0">
           <div className="flex flex-col justify-between">
             {props.index != 1 && (
-              <Button onClick={handleMoveUp} className="hover:shadow-inner hover:shadow-sky-500">
+              <Button tabIndex={-1} onClick={handleMoveUp} className="hover:shadow-inner hover:shadow-sky-500">
                 <ArrowUp />
               </Button>
             )}
-            {props.index != 1 && (
-              <Button onClick={handleMoveDown} className="hover:shadow-inner hover:shadow-sky-500">
+            {!props.lastItem && (
+              <Button tabIndex={-1} onClick={handleMoveDown} className="hover:shadow-inner hover:shadow-sky-500">
                 <ArrowDown></ArrowDown>
               </Button>
             )}
@@ -222,7 +220,7 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
           <div className="flex w-full justify-end">
             {(imageFile || imageURL !== "") && !wantToEditImage ? (
               <div>
-                <Button className="scale-75  justify-end hover:shadow-inner hover:shadow-sky-400 " onClick={() => setwantToEditImage(true)}>
+                <Button tabIndex={-1} className="scale-75  justify-end hover:shadow-inner hover:shadow-sky-400 " onClick={() => setwantToEditImage(true)}>
                   <Edit2 scale={0.5}></Edit2>
                 </Button>
               </div>
@@ -244,8 +242,8 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
             {audioURL && !wantToEditAudio ? (
               <div className="flex justify-center flex-col w-full ">
                 <div className="flex flex-row justify-center">
-                  <audio onError={() => setAudioError(true)} src={audioURL} onLoad={() => console.log("loaded")} className="scale-75" controls></audio>
-                  <Button className="scale-75  ml-auto  hover:shadow-inner hover:shadow-sky-400 " onClick={() => setwantToEditAudio(true)}>
+                  <audio tabIndex={-1} onError={() => setAudioError(true)} src={audioURL} className="scale-75" controls></audio>
+                  <Button tabIndex={-1} className="scale-75  ml-auto  hover:shadow-inner hover:shadow-sky-400 " onClick={() => setwantToEditAudio(true)}>
                     <Edit2 scale={0.5}></Edit2>
                   </Button>
                 </div>
@@ -262,7 +260,7 @@ export function MusicDataNftForm(props: MusicDataNftFormProps) {
                 Save
               </button>
             </div>
-            <Button onClick={deleteSong} className="ml-auto flex justify-end self-end hover:shadow-inner hover:shadow-red-400">
+            <Button tabIndex={-1} onClick={deleteSong} className="ml-auto flex justify-end self-end hover:shadow-inner hover:shadow-red-400">
               <Trash2 />
             </Button>
           </div>

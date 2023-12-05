@@ -6,13 +6,16 @@ import axios from "axios";
 import { useGetLoginInfo } from "@multiversx/sdk-dapp/hooks";
 import { API_URL } from "../../utils/constants";
 import { ToolTip } from "../../libComponents/Tooltip";
-import { CopyIcon, InfoIcon } from "lucide-react";
+import { CopyIcon, InfoIcon, XCircle } from "lucide-react";
 import ProgressBar from "../../components/ProgressBar";
 import toast, { Toaster } from "react-hot-toast";
 
- 
+import { theToken } from "../../utils/constants";
+
 // todo verify and dont allow users to upload manifest files without songs
 // todo when reloading after uploading a manifest file, make it to show the new manifest file not the old one
+//todo add a modal after the upload with whats next
+///remove save button
 
 type SongData = {
   date: string;
@@ -31,14 +34,14 @@ type FilePair = {
 
 export const UploadData: React.FC = (props) => {
   const location = useLocation();
+
   const { manifestFile, action, type, template, storage, descentralized, version } = location.state || {};
   const [songsData, setSongsData] = useState<Record<number, SongData>>({});
   const [filePairs, setFilePairs] = useState<Record<number, FilePair>>({});
 
   const [numberOfSongs, setNumberOfSongs] = useState(1);
   const { tokenLogin } = useGetLoginInfo();
-  const theToken = tokenLogin?.nativeAuthToken;
-  
+
   const [isUploadingSongs, setIsUploadingSongs] = useState(false);
   const [isUploadingManifest, setIsUploadingManifest] = useState(false);
 
@@ -53,7 +56,7 @@ export const UploadData: React.FC = (props) => {
     stream: "false",
   });
   const apiUrlPost = `${API_URL}/upload`;
-
+  console.log("nr of songs: ", numberOfSongs);
   useEffect(() => {
     if (manifestFile && manifestFile.data_stream) {
       try {
@@ -78,9 +81,21 @@ export const UploadData: React.FC = (props) => {
       } catch (err) {
         console.log("ERROR: ", err);
         if (err instanceof Error) {
-          toast.error("Error parsing manifest file. Invalid manifest file : " + err.message);
+          toast.error("Error parsing manifest file. Invalid manifest file : " + err.message, {
+            icon: (
+              <button onClick={() => toast.dismiss()}>
+                <XCircle color="red" />
+              </button>
+            ),
+          });
         } else {
-          toast.error("Error parsing manifest file.");
+          toast.error("Error parsing manifest file.", {
+            icon: (
+              <button onClick={() => toast.dismiss()}>
+                <XCircle color="red" />
+              </button>
+            ),
+          });
         }
       }
     }
@@ -105,7 +120,14 @@ export const UploadData: React.FC = (props) => {
     } catch (err) {
       console.log("ERROR iterating through songs Data : ", err);
       toast.error(
-        "Error iterating through songs Data : " + `${err instanceof Error ? err.message : ""}` + " Please check all the fields to be filled correctly."
+        "Error iterating through songs Data : " + `${err instanceof Error ? err.message : ""}` + " Please check all the fields to be filled correctly.",
+        {
+          icon: (
+            <button onClick={() => toast.dismiss()}>
+              <XCircle color="red" />
+            </button>
+          ),
+        }
       );
     }
     if (filesToUpload.getAll("files").length === 0) return [];
@@ -119,7 +141,13 @@ export const UploadData: React.FC = (props) => {
       return response.data;
     } catch (error) {
       console.error("Error uploading files:", error);
-      toast.error("Error uploading files to Ipfs: " + `${error instanceof Error ? error.message : ""}`);
+      toast.error("Error uploading files to Ipfs: " + `${error instanceof Error ? error.message : ""}`, {
+        icon: (
+          <button onClick={() => toast.dismiss()}>
+            <XCircle color="red" />
+          </button>
+        ),
+      });
     }
   }
 
@@ -178,7 +206,13 @@ export const UploadData: React.FC = (props) => {
       // return only the songs that are not null
       return transformedData.filter((song: any) => song !== null);
     } catch (err) {
-      toast.error("Error transforming the data: " + `${err instanceof Error ? err.message : ""}`);
+      toast.error("Error transforming the data: " + `${err instanceof Error ? err.message : ""}`, {
+        icon: (
+          <button onClick={() => toast.dismiss()}>
+            <XCircle color="red" />
+          </button>
+        ),
+      });
       console.log("ERROR transforming the data: ", err);
       setIsUploadingSongs(false);
     }
@@ -209,7 +243,13 @@ export const UploadData: React.FC = (props) => {
     setIsUploadingManifest(true);
 
     if (!formData.name || !formData.creator || !formData.createdOn || !songsData) {
-      toast.error("Please fill all the fields from the header section");
+      toast.error((t) => <span>Please fill all the fields from the header section</span>, {
+        icon: (
+          <button onClick={() => toast.dismiss()}>
+            <XCircle color="red" />
+          </button>
+        ),
+      });
       return;
     }
     try {
@@ -252,7 +292,14 @@ export const UploadData: React.FC = (props) => {
         throw new Error("The manifest file has not been uploaded correctly");
       }
     } catch (error) {
-      toast.error("Error generating the manifest file: " + `${error instanceof Error ? error.message : ""}`);
+      toast.error("Error generating the manifest file: " + `${error instanceof Error ? error.message : ""}`, {
+        icon: (
+          <button onClick={() => toast.dismiss()}>
+            <XCircle color="red" />
+          </button>
+        ),
+      });
+
       setIsUploadingManifest(false);
       console.log("Error:", error);
     }
@@ -345,17 +392,45 @@ export const UploadData: React.FC = (props) => {
   /// copy the link to clipboard
   function copyLink(text: string): void {
     if (text) navigator.clipboard.writeText(text);
-    else toast.error("Error copying the link to clipboard. Link is empty.");
+    else
+      toast.error("Error copying the link to clipboard. Link is empty.", {
+        icon: (
+          <button onClick={() => toast.dismiss()}>
+            <XCircle color="red" />
+          </button>
+        ),
+      });
   }
-  console.log("songsData: ", songsData);
+  //  console.log("songsData: ", songsData);
   // console.log("filePairs: ", filePairs);
-  console.log("manifestFile: ", manifestFile);
+  // console.log("manifestFile: ", manifestFile);
   // console.log("formData: ", formData);
   // console.log("totalItems: ", numberOfSongs);
   // console.log("manifestCid: ", manifestCid);
 
   return (
     <div className="p-4 flex flex-col">
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        containerStyle={{
+          position: "sticky",
+          top: "0",
+          right: "0",
+          width: "100%",
+        }}
+        toastOptions={{
+          className: "",
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            duration: 3000,
+          },
+        }}
+      />
       <b className=" py-2 text-xl  font-medium"> Let’s update your data! Here is what you wanted to do... </b>
       <div className="flex flex-row gap-4 mb-4">
         {action && (
@@ -485,6 +560,7 @@ export const UploadData: React.FC = (props) => {
             <MusicDataNftForm
               key={index}
               index={index}
+              lastItem={Number(index) === numberOfSongs - 1}
               song={songsData[index]}
               setterFunction={handleFilesSelected}
               swapFunction={swapSongs}></MusicDataNftForm>
@@ -558,22 +634,8 @@ export const UploadData: React.FC = (props) => {
           </div>
         </div>
       )}
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-        toastOptions={{
-          className: "",
-          duration: 5000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
-          success: {
-            duration: 3000,
-          },
-        }}
-      />
-      {isUploadingManifest && <ProgressBar progress={progressBar} />}
+
+      {isUploadingManifest && progressBar < 100 && <ProgressBar progress={progressBar} />}
     </div>
   );
 };
