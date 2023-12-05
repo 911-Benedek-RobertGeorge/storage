@@ -10,8 +10,7 @@ import { CopyIcon, InfoIcon } from "lucide-react";
 import ProgressBar from "../../components/ProgressBar";
 import toast, { Toaster } from "react-hot-toast";
 
-import { theToken } from "../../utils/constants";
-
+ 
 // todo verify and dont allow users to upload manifest files without songs
 // todo when reloading after uploading a manifest file, make it to show the new manifest file not the old one
 
@@ -32,13 +31,13 @@ type FilePair = {
 
 export const UploadData: React.FC = (props) => {
   const location = useLocation();
-
   const { manifestFile, action, type, template, storage, descentralized, version } = location.state || {};
   const [songsData, setSongsData] = useState<Record<number, SongData>>({});
   const [filePairs, setFilePairs] = useState<Record<number, FilePair>>({});
 
   const [numberOfSongs, setNumberOfSongs] = useState(1);
   const { tokenLogin } = useGetLoginInfo();
+  const theToken = tokenLogin.nativeAuthToken;
 
   const [isUploadingSongs, setIsUploadingSongs] = useState(false);
   const [isUploadingManifest, setIsUploadingManifest] = useState(false);
@@ -497,7 +496,7 @@ export const UploadData: React.FC = (props) => {
         </Button>
       </div>
       {!manifestCid ? (
-        <button onClick={generateManifestFile} disabled={progressBar > 0} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+        <button onClick={generateManifestFile} /*disabled={progressBar > 0}*/ className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
           Upload
         </button>
       ) : (
