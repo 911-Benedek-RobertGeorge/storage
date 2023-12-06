@@ -400,12 +400,12 @@ export const UploadData: React.FC = (props) => {
         ),
       });
   }
-  //  console.log("songsData: ", songsData);
-  // console.log("filePairs: ", filePairs);
-  // console.log("manifestFile: ", manifestFile);
+     console.log("songsData: ", songsData);
+    console.log("filePairs: ", filePairs);
+    console.log("manifestFile: ", manifestFile);
   // console.log("formData: ", formData);
   // console.log("totalItems: ", numberOfSongs);
-  // console.log("manifestCid: ", manifestCid);
+    console.log("manifestCid: ", manifestCid);
 
   return (
     <div className="p-4 flex flex-col">
