@@ -134,7 +134,7 @@ export const UploadData: React.FC = (props) => {
       const response = await axios.post(apiUrlPost, filesToUpload, {
         headers: {
           "authorization": `Bearer ${theToken}`,
-          "Content-Type": "multipart/form-data",
+          // "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
@@ -280,7 +280,7 @@ export const UploadData: React.FC = (props) => {
       const response = await axios.post(apiUrlPost, formDataFormat, {
         headers: {
           "authorization": `Bearer ${theToken}`,
-          "Content-Type": "multipart/form-data",
+          // "Content-Type": "multipart/form-data",
           // "x-amz-meta-marshal-deep-fetch": 1,
         },
       });
