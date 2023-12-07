@@ -5,6 +5,7 @@ import { useGetLoginInfo } from "@multiversx/sdk-dapp/hooks";
 import { API_URL } from "../../utils/constants";
  import DataAssetCard from "../CardComponents/DataAssetCard";
 import toast, { Toaster } from "react-hot-toast";
+import { Lightbulb } from "lucide-react";
 
 interface DataStream {
   name: string;
@@ -20,6 +21,7 @@ interface ManifestFile {
   data_stream: DataStream;
   data: [];
   version: number;
+  cidv1: string;
 }
 
 type DataAsset = {
@@ -29,13 +31,14 @@ type DataAsset = {
   cidv1: string;
   mimeType: string;
 };
-
+/// todo check why some of the manifest files are not downloaded and show the bad manifest
 export const DataAssetList: React.FC = () => {
   const [storedDataAssets, setStoredDataAssets] = useState<DataAsset[]>([]);
   const { tokenLogin } = useGetLoginInfo();
+  const theToken = tokenLogin?.nativeAuthToken;
+
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
-  const theToken = tokenLogin?.nativeAuthToken;
 
   // fetch all data assets of an address
   async function fetchAllDataAssetsOfAnAddress() {
@@ -45,12 +48,21 @@ export const DataAssetList: React.FC = () => {
       const response = await axios.get(apiUrlGet, {
         headers: {
           "authorization": `Bearer ${theToken}`,
+          // "Access-Control-Allow-Credentials": "true",
         },
       });
-
       setStoredDataAssets(response.data);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("ERR", error.code, error.message);
+      if (error?.code === "ERR_BAD_REQUEST") {
+        toast("Re-login and try again! ", {
+          icon: <Lightbulb color="yellow"></Lightbulb>,
+        });
+      } else {
+        toast("Sorry, there’s a problem with the service, try again later " + error?.message, {
+          icon: <Lightbulb color="yellow"></Lightbulb>,
+        });
+      }
       throw error; // error to be catched by toast.promise
     }
   }
@@ -87,26 +99,26 @@ export const DataAssetList: React.FC = () => {
           "authorization": `Bearer ${theToken}`,
         },
       });
-      
       if (!response.data?.data_stream) {
-        console.log("manifest file is empty");
+        /// empty manifest file or wrong format
         return undefined;
       }
-      const versionStampedManifestFile = { ...response.data, version: version };
+      const versionStampedManifestFile = { ...response.data, version: version, cidv1: manifestCid };
       setManifestFiles((prev) => [...prev, versionStampedManifestFile]);
     } catch (error) {
-      console.error("Error downloading manifest files:", error);
-      toast.error("Error downloading manifest files. Check your connection and try again.");
+      console.log("Error downloading manifest files:", error);
+      toast.error("Error downloading manifest files. Check your connection and try again. " + (error as Error).message);
+      toast("Wait some more time for the manifest file to get pinned", {
+        icon: <Lightbulb></Lightbulb>,
+      });
     }
   }
   useEffect(() => {
     if (storedDataAssets.length === 0) {
-      console.log("Fetching all data assets from Ipfs of your address...");
-
       toast.promise(fetchAllDataAssetsOfAnAddress(), {
         loading: "Fetching all data assets from Ipfs of your address...",
         success: <b>Fetched all data assets from Ipfs of your address!</b>,
-        error: <b>The data assests could not be fetched. Check your connection and try again.</b>,
+        error: <b>The data assests could not be fetched. </b>,
       });
     }
   }, []);
@@ -127,7 +139,15 @@ export const DataAssetList: React.FC = () => {
     <div className="p-4 flex flex-col">
       <div className="gap-4 grid grid-cols-3">
         {manifestFiles.map((manifest: ManifestFile, index) => (
-          <Link key={index} to={"/upload"} state={{ manifestFile: manifestFiles[index], action: "Update Data Asset", version: manifestFiles[index].version }}>
+          <Link
+            key={index}
+            to={"/upload"}
+            state={{
+              manifestFile: manifestFiles[index],
+              action: "Update Data Asset",
+              version: manifestFiles[index].version,
+              currentManifestFileCID: manifestFiles[index].cidv1,
+            }}>
             <DataAssetCard dataAsset={manifest.data_stream}></DataAssetCard>
           </Link>
         ))}
