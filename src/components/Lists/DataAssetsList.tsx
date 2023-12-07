@@ -87,6 +87,11 @@ export const DataAssetList: React.FC = () => {
           "authorization": `Bearer ${theToken}`,
         },
       });
+      
+      if (!response.data?.data_stream) {
+        console.log("manifest file is empty");
+        return undefined;
+      }
       const versionStampedManifestFile = { ...response.data, version: version };
       setManifestFiles((prev) => [...prev, versionStampedManifestFile]);
     } catch (error) {
