@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useGetLoginInfo } from "@multiversx/sdk-dapp/hooks";
 import { API_URL } from "../../utils/constants";
- import DataAssetCard from "../CardComponents/DataAssetCard";
+import { theToken } from "../../utils/constants";
+import DataAssetCard from "../CardComponents/DataAssetCard";
 import toast, { Toaster } from "react-hot-toast";
 import { Lightbulb } from "lucide-react";
 
@@ -35,8 +36,6 @@ type DataAsset = {
 export const DataAssetList: React.FC = () => {
   const [storedDataAssets, setStoredDataAssets] = useState<DataAsset[]>([]);
   const { tokenLogin } = useGetLoginInfo();
-  const theToken = tokenLogin?.nativeAuthToken;
-
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
 
@@ -48,14 +47,13 @@ export const DataAssetList: React.FC = () => {
       const response = await axios.get(apiUrlGet, {
         headers: {
           "authorization": `Bearer ${theToken}`,
-          // "Access-Control-Allow-Credentials": "true",
         },
       });
       setStoredDataAssets(response.data);
     } catch (error: any) {
       console.error("ERR", error.code, error.message);
       if (error?.code === "ERR_BAD_REQUEST") {
-        toast("Re-login and try again! ", {
+        toast("Native auth token expired. Re-login and try again! ", {
           icon: <Lightbulb color="yellow"></Lightbulb>,
         });
       } else {
@@ -74,7 +72,7 @@ export const DataAssetList: React.FC = () => {
 
       let latestVersionManifestFile: { [key: string]: { version: number; cidv1: string } } = {};
       filteredData.forEach((item) => {
-        const fileName = item.fileName.split(".-")[1]; //   filename format is "1.-manifest-name-creator"
+        const fileName = item.fileName.split(".-")[1]; //   filename format is "1.-manifest-name-creator-|random.json"
         const version = parseInt(item.fileName.split(".-")[0]);
         if (!fileName) return;
 
@@ -107,12 +105,14 @@ export const DataAssetList: React.FC = () => {
       setManifestFiles((prev) => [...prev, versionStampedManifestFile]);
     } catch (error) {
       console.log("Error downloading manifest files:", error);
-      toast.error("Error downloading manifest files. Check your connection and try again. " + (error as Error).message);
-      toast("Wait some more time for the manifest file to get pinned", {
-        icon: <Lightbulb></Lightbulb>,
+      //toast.error("Error downloading manifest files. Check your connection and try again. " + (error as Error).message, { id: "fetch-manifest-file" });
+      toast("Wait some more time for the manifest file to get pinned if you can't find the one you are looking for", {
+        icon: <Lightbulb color="yellow"></Lightbulb>,
+        id: "fetch-manifest-file1",
       });
     }
   }
+
   useEffect(() => {
     if (storedDataAssets.length === 0) {
       toast.promise(fetchAllDataAssetsOfAnAddress(), {
@@ -128,11 +128,14 @@ export const DataAssetList: React.FC = () => {
   }, [storedDataAssets]);
 
   useEffect(() => {
-    if (Object.keys(latestVersionCid).length !== 0) {
-      Object.entries(latestVersionCid).map(([key, manifestCid]) => {
-        downloadTheManifestFile(manifestCid.version, manifestCid.cidv1);
-      });
-    }
+    const downloadLatestVersionsManifestFiles = async () => {
+      if (Object.keys(latestVersionCid).length !== 0) {
+        Object.entries(latestVersionCid).map(([key, manifestCid]) => {
+          downloadTheManifestFile(manifestCid.version, manifestCid.cidv1);
+        });
+      }
+    };
+    downloadLatestVersionsManifestFiles();
   }, [latestVersionCid]);
 
   return (
