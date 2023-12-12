@@ -10,8 +10,7 @@ import { CopyIcon, InfoIcon, Lightbulb, XCircle } from "lucide-react";
 import ProgressBar from "../../components/ProgressBar";
 import toast, { Toaster } from "react-hot-toast";
 
-import { theToken } from "../../utils/constants";
-import { generateRandomString } from "../../utils/utils";
+ import { generateRandomString } from "../../utils/utils";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackMusicDataNfts from "../../components/ErrorComponents/ErrorFallbackMusicDataNfts";
 import { Err } from "@multiversx/sdk-core/out";
@@ -49,6 +48,7 @@ export const UploadData: React.FC = (props) => {
   const { tokenLogin } = useGetLoginInfo();
   const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(true);
   const [isUploadingManifest, setIsUploadingManifest] = useState(false);
+  const theToken = tokenLogin?.nativeAuthToken;
 
   const [progressBar, setProgressBar] = useState(0);
   const [manifestCid, setManifestCid] = useState(null);

@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useGetLoginInfo } from "@multiversx/sdk-dapp/hooks";
 import { API_URL } from "../../utils/constants";
-import { theToken } from "../../utils/constants";
-import DataAssetCard from "../CardComponents/DataAssetCard";
+ import DataAssetCard from "../CardComponents/DataAssetCard";
 import toast, { Toaster } from "react-hot-toast";
 import { Lightbulb } from "lucide-react";
 
@@ -36,6 +35,7 @@ type DataAsset = {
 export const DataAssetList: React.FC = () => {
   const [storedDataAssets, setStoredDataAssets] = useState<DataAsset[]>([]);
   const { tokenLogin } = useGetLoginInfo();
+  const theToken = tokenLogin?.nativeAuthToken;
   const [latestVersionCid, setLatestVersionCid] = useState<{ [key: string]: { version: number; cidv1: string } }>({});
   const [manifestFiles, setManifestFiles] = useState<ManifestFile[]>([]);
 
