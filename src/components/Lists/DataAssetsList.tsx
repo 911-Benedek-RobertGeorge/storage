@@ -52,7 +52,7 @@ export const DataAssetList: React.FC = () => {
       setStoredDataAssets(response.data);
     } catch (error: any) {
       console.error("ERR", error.code, error.message);
-      if (error?.code === "ERR_BAD_REQUEST") {
+      if(error?.response.data.statusCode === 403) {
         toast("Native auth token expired. Re-login and try again! ", {
           icon: <Lightbulb color="yellow"></Lightbulb>,
         });
