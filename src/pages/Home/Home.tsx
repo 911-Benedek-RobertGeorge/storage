@@ -95,7 +95,7 @@ export const Home: React.FC = () => {
                 setterFunction={setStorage}
                 disabled={[true, false]}
               />
-              {storage == "Dentralized web3 Storage" && (
+              {storage == "Decentralized web3 Storage" && (
                 <XStorageCheckBox
                   title="Decentralized web3 Storage"
                   description="What decentralized solution would you like to go with?"
